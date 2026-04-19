@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ProductsGrid } from "@/components/catalog/products-grid";
 import { searchProducts } from "@/lib/queries/products";
+import { noIndexMetadata } from "@/lib/seo/private-pages";
 import { getWishlistProductIds } from "@/lib/queries/wishlist";
+
+export const metadata: Metadata = noIndexMetadata(
+  "Поиск по каталогу",
+  "Поиск товаров в каталоге «Эквилибриум». Страница поиска не индексируется, чтобы избежать дублей.",
+);
 
 type SearchPageProps = {
   searchParams: Promise<{ q?: string }>;

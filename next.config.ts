@@ -29,6 +29,9 @@ function normalizeAssetPrefix(): string | undefined {
 
 const nextConfig: NextConfig = {
   assetPrefix: normalizeAssetPrefix(),
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

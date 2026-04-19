@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LoginForm } from "@/components/auth/login-form";
+import { noIndexMetadata } from "@/lib/seo/private-pages";
+
+export const metadata: Metadata = noIndexMetadata(
+  "Вход в аккаунт",
+  "Вход для покупателей интернет-магазина «Эквилибриум». Служебная страница не индексируется.",
+);
 
 type LoginPageProps = {
   searchParams: Promise<{ next?: string }>;

@@ -173,7 +173,7 @@ function ProfileTab({
             href={siteContact.phoneHref}
             className="inline-flex items-center rounded-2xl border border-[#403A34]/15 bg-white px-6 py-3 text-sm font-semibold text-[#403A34] transition-colors hover:bg-[#f6f1eb]"
           >
-            {siteContact.phone}
+            {siteContact.phoneContactName}: {siteContact.phone}
           </a>
         </div>
       </section>

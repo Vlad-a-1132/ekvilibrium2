@@ -8,8 +8,10 @@ export const siteContact = {
   ],
   phone: "+7 928 288-75-32",
   phoneHref: "tel:+79282887532",
+  /** Контакт по телефону (отображается рядом с номером). */
+  phoneContactName: "Эльдар",
   email: "equilibriumkanz@gmail.com",
-  hours: "Пн–Сб 10:00–19:00",
+  hours: "Ежедневно, кроме среды, 8:00–16:00",
   /**
    * Виджет Яндекс.Карт (тот же um, что в конструкторе).
    * @see https://yandex.ru/map-constructor/

@@ -11,6 +11,8 @@ import { ProductSpecsTable, type SpecRow } from "@/components/product/product-sp
 import { getStockLabel } from "@/lib/product-stock-level";
 import { getProductBySlug, getRelatedProducts } from "@/lib/queries/products";
 import { getWishlistProductIds } from "@/lib/queries/wishlist";
+import { absoluteUrl } from "@/lib/seo/site";
+import { truncateMetaDescription } from "@/lib/seo/truncate";
 import { cn } from "@/lib/utils";
 
 type ProductPageProps = {
@@ -23,14 +25,31 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!product) {
     return { title: "Товар" };
   }
-  const description = product.description?.slice(0, 160).trim() ?? undefined;
+
+  const titleFromSeo = product.seoTitle?.trim();
+  const title =
+    titleFromSeo ||
+    `${product.name} — купить в Пятигорске | Эквилибриум`;
+
+  const rawDesc =
+    product.seoDescription?.trim() ||
+    product.description?.trim() ||
+    `«${product.name}» — ${product.mainCategory.name.toLowerCase()} в интернет-магазине канцелярии «Эквилибриум», Пятигорск. Цена и наличие на странице.`;
+  const description = truncateMetaDescription(rawDesc);
+
+  const canonical = absoluteUrl(`/product/${product.slug}`);
+
   return {
-    title: product.name,
+    title,
     description,
+    alternates: { canonical },
     openGraph: {
-      title: product.name,
+      type: "website",
+      title,
       description,
+      url: canonical,
     },
+    robots: { index: true, follow: true },
   };
 }
 

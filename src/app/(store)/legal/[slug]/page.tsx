@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SiteContainer } from "@/components/layout/site-container";
+import { absoluteUrl } from "@/lib/seo/site";
+import { truncateMetaDescription } from "@/lib/seo/truncate";
 
 const PAGES: Record<string, { title: string; intro: string }> = {
   privacy: {
@@ -18,11 +21,20 @@ const PAGES: Record<string, { title: string; intro: string }> = {
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const page = PAGES[slug];
   if (!page) return { title: "Правовая информация" };
-  return { title: `${page.title} — Эквилибриум` };
+  const title = `${page.title} — «Эквилибриум»`;
+  const description = truncateMetaDescription(page.intro);
+  const canonical = absoluteUrl(`/legal/${slug}`);
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical },
+    robots: { index: true, follow: true },
+  };
 }
 
 export default async function LegalPage({ params }: Props) {

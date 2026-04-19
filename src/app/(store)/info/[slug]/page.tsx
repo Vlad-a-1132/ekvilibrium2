@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -5,6 +6,8 @@ import { notFound } from "next/navigation";
 import { SiteContainer } from "@/components/layout/site-container";
 import { infoPages } from "@/data/info-pages";
 import { siteContact } from "@/data/site-contact";
+import { absoluteUrl } from "@/lib/seo/site";
+import { truncateMetaDescription } from "@/lib/seo/truncate";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -14,14 +17,34 @@ export function generateStaticParams() {
   return [{ slug: "order" }, { slug: CONTACTS_SLUG }];
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   if (slug === CONTACTS_SLUG) {
-    return { title: "Контакты — Эквилибриум" };
+    const title = "Контакты магазина канцелярии «Эквилибриум» — Пятигорск";
+    const description = truncateMetaDescription(
+      `${siteContact.lead} Телефон ${siteContact.phone}, email ${siteContact.email}.`,
+    );
+    const canonical = absoluteUrl(`/info/${CONTACTS_SLUG}`);
+    return {
+      title,
+      description,
+      alternates: { canonical },
+      openGraph: { title, description, url: canonical },
+      robots: { index: true, follow: true },
+    };
   }
   const page = infoPages[slug as keyof typeof infoPages];
   if (!page) return { title: "Информация" };
-  return { title: `${page.title} — Эквилибриум` };
+  const title = `${page.title} — «Эквилибриум», Пятигорск`;
+  const description = truncateMetaDescription(page.lead);
+  const canonical = absoluteUrl(`/info/${slug}`);
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical },
+    robots: { index: true, follow: true },
+  };
 }
 
 export default async function InfoPage({ params }: Props) {
@@ -58,9 +81,18 @@ export default async function InfoPage({ params }: Props) {
               <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#403A34]/10 bg-[#fbf8f4] text-[#403A34]/65">
                 <Phone className="size-4" aria-hidden />
               </span>
-              <a href={siteContact.phoneHref} className="font-medium text-[#403A34] underline-offset-2 hover:underline">
-                {siteContact.phone}
-              </a>
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-2">
+                <span className="font-medium text-[#403A34]">{siteContact.phoneContactName}</span>
+                <a href={siteContact.phoneHref} className="font-medium text-[#403A34] underline-offset-2 hover:underline">
+                  {siteContact.phone}
+                </a>
+                <Link
+                  href={`mailto:${siteContact.email}?subject=Вопрос%20с%20сайта%20Эквилибриум`}
+                  className="inline-flex w-fit items-center justify-center rounded-xl border border-[#403A34]/20 bg-[#403A34] px-4 py-2 text-xs font-semibold text-[#f6f1eb] shadow-sm transition-colors hover:bg-[#2f2a25] sm:text-sm"
+                >
+                  Написать нам
+                </Link>
+              </div>
             </li>
             <li className="flex gap-3">
               <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#403A34]/10 bg-[#fbf8f4] text-[#403A34]/65">
@@ -73,15 +105,6 @@ export default async function InfoPage({ params }: Props) {
           </ul>
 
           <p className="mt-6 text-sm text-[#403A34]/55">{siteContact.hours}</p>
-
-          <div className="mt-8">
-            <Link
-              href={`mailto:${siteContact.email}?subject=Вопрос%20с%20сайта%20Эквилибриум`}
-              className="inline-flex items-center justify-center rounded-2xl bg-[#403A34] px-6 py-3 text-sm font-semibold text-[#f6f1eb] shadow-lg shadow-[#403A34]/18 transition-colors hover:bg-[#2f2a25]"
-            >
-              Написать нам
-            </Link>
-          </div>
 
           <div className="mt-10 overflow-hidden rounded-2xl border border-[#403A34]/10 bg-[#f6f1eb]/40">
             <div className="relative aspect-[16/10] min-h-[240px] w-full sm:aspect-[16/9]">

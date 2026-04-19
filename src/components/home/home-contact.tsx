@@ -36,9 +36,18 @@ export function HomeContact() {
               <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#403A34]/10 bg-white/80 text-[#403A34]/65">
                 <Phone className="size-4" aria-hidden />
               </span>
-              <a href={siteContact.phoneHref} className="font-medium hover:underline">
-                {siteContact.phone}
-              </a>
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-2">
+                <span className="font-medium text-[#403A34]">{siteContact.phoneContactName}</span>
+                <a href={siteContact.phoneHref} className="font-medium underline-offset-2 hover:underline">
+                  {siteContact.phone}
+                </a>
+                <Link
+                  href={`mailto:${siteContact.email}?subject=Заказ%20с%20сайта`}
+                  className="inline-flex w-fit items-center justify-center rounded-xl border border-[#403A34]/20 bg-[#403A34] px-4 py-2 text-xs font-semibold text-[#f6f1eb] shadow-sm transition-colors hover:bg-[#2f2a25] sm:text-sm"
+                >
+                  Написать нам
+                </Link>
+              </div>
             </li>
             <li className="flex gap-3">
               <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#403A34]/10 bg-white/80 text-[#403A34]/65">
@@ -51,15 +60,6 @@ export function HomeContact() {
           </ul>
 
           <p className="text-xs text-[#403A34]/50">{siteContact.hours}</p>
-
-          <div className="pt-2">
-            <Link
-              href={`mailto:${siteContact.email}?subject=Заказ%20с%20сайта`}
-              className="inline-flex items-center justify-center rounded-2xl bg-[#403A34] px-6 py-3 text-sm font-semibold text-[#f6f1eb] shadow-lg shadow-[#403A34]/18 transition-colors hover:bg-[#2f2a25]"
-            >
-              Написать нам
-            </Link>
-          </div>
         </div>
 
         <div className="relative min-h-[280px] border-t border-[#403A34]/10 bg-[#f6f1eb]/40 lg:min-h-[min(100%,440px)] lg:border-l lg:border-t-0">

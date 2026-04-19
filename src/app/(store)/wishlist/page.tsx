@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { WishlistClient } from "@/components/wishlist/wishlist-client";
+import { noIndexMetadata } from "@/lib/seo/private-pages";
 import { getWishlist } from "@/lib/queries/wishlist";
+
+export const metadata: Metadata = noIndexMetadata(
+  "Избранное",
+  "Список избранного в интернет-магазине «Эквилибриум». Персональная страница не индексируется.",
+);
 
 export default async function WishlistPage() {
   const lines = await getWishlist();

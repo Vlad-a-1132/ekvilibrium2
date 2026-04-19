@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CartClient } from "@/components/cart/cart-client";
 import { getCurrentUser } from "@/lib/auth/user";
+import { noIndexMetadata } from "@/lib/seo/private-pages";
 import { getCart } from "@/lib/queries/cart";
+
+export const metadata: Metadata = noIndexMetadata(
+  "Корзина",
+  "Ваша корзина в интернет-магазине «Эквилибриум». Страница не индексируется поисковыми системами.",
+);
 
 export default async function CartPage() {
   const [data, user] = await Promise.all([getCart(), getCurrentUser()]);

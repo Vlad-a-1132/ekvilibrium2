@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -8,6 +9,9 @@ import { ProductsGrid } from "@/components/catalog/products-grid";
 import { getMainCategoryForCatalog, getSubcategoriesByMainCategorySlug } from "@/lib/queries/categories";
 import { getProductsByCategory } from "@/lib/queries/products";
 import { getWishlistProductIds } from "@/lib/queries/wishlist";
+import { absoluteUrl } from "@/lib/seo/site";
+import { mainCategorySeo, subcategorySeoParagraph } from "@/lib/seo/strings";
+import { truncateMetaDescription } from "@/lib/seo/truncate";
 
 type CatalogPageProps = {
   params: Promise<{ mainCategorySlug: string }>;
@@ -18,6 +22,58 @@ function parsePage(raw: string | undefined) {
   const n = Number.parseInt(raw ?? "1", 10);
   if (Number.isNaN(n) || n < 1) return 1;
   return n;
+}
+
+export async function generateMetadata({ params, searchParams }: CatalogPageProps): Promise<Metadata> {
+  const { mainCategorySlug } = await params;
+  const sp = await searchParams;
+  const activeSubSlug = sp.sub?.trim() || undefined;
+  const pageNum = parsePage(sp.page);
+
+  const category = await getMainCategoryForCatalog(mainCategorySlug);
+  if (!category) {
+    return { title: "Каталог" };
+  }
+
+  const seo = mainCategorySeo[mainCategorySlug];
+  const sub = activeSubSlug ? category.subcategories.find((s) => s.slug === activeSubSlug) : undefined;
+
+  let title =
+    seo?.title ?? `${category.name} в Пятигорске — купить в «Эквилибриум»`;
+  let description =
+    seo?.description ??
+    `Каталог «${category.name}» в Пятигорске. Интернет-магазин канцелярии «Эквилибриум»: цены и наличие в карточках товаров.`;
+
+  if (sub) {
+    title = `${sub.name} в Пятигорске — ${category.name} | Эквилибриум`;
+    description = truncateMetaDescription(
+      `${sub.name} в каталоге «${category.name}», Пятигорск. «Эквилибриум»: канцелярия и канцтовары онлайн — цены и наличие в карточках.`,
+    );
+  }
+
+  if (pageNum > 1) {
+    title = `${title} — стр. ${pageNum}`;
+  }
+
+  const canonical = absoluteUrl(
+    `/catalog/${mainCategorySlug}`,
+    {
+      ...(activeSubSlug ? { sub: activeSubSlug } : {}),
+      ...(pageNum > 1 ? { page: String(pageNum) } : {}),
+    },
+  );
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+    },
+    robots: { index: true, follow: true },
+  };
 }
 
 export default async function CatalogMainCategoryPage({ params, searchParams }: CatalogPageProps) {
@@ -42,6 +98,15 @@ export default async function CatalogMainCategoryPage({ params, searchParams }: 
 
   const empty = total === 0;
 
+  const seo = mainCategorySeo[mainCategorySlug];
+  const activeSub = activeSubSlug
+    ? subcategories.find((s) => s.slug === activeSubSlug)
+    : undefined;
+  const introBody = activeSub
+    ? subcategorySeoParagraph(activeSub.name, category.name, mainCategorySlug)
+    : seo?.intro ??
+      `Каталог «${category.name}» в интернет-магазине «Эквилибриум», Пятигорск. Цены и наличие — в карточках; при вопросах по разделу напишите или позвоните.`;
+
   return (
     <div className="py-12 md:py-16">
       <nav className="text-sm text-[#403A34]/55">
@@ -52,11 +117,19 @@ export default async function CatalogMainCategoryPage({ params, searchParams }: 
         <span className="text-[#403A34]">{category.name}</span>
       </nav>
 
-      <h1 className="mt-6 font-serif text-3xl text-[#403A34] md:text-4xl">{category.name}</h1>
-      <p className="mt-3 max-w-2xl text-[#403A34]/70">
-        Выберите подкатегорию или смотрите все товары раздела. Список загружается из базы с учётом{" "}
-        <code className="rounded bg-[#403A34]/10 px-1 text-sm">?sub=</code> и пагинации.
-      </p>
+      <h1 className="mt-6 font-serif text-3xl text-[#403A34] md:text-4xl">
+        {activeSub ? (
+          <>
+            <span className="block">{activeSub.name}</span>
+            <span className="mt-1 block text-xl font-normal leading-snug text-[#403A34]/72 md:text-2xl">
+              {category.name}
+            </span>
+          </>
+        ) : (
+          category.name
+        )}
+      </h1>
+      <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-[#403A34]/76">{introBody}</p>
 
       {subcategories.length > 0 && (
         <div className="mt-8 lg:hidden">

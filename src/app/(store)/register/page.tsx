@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { RegisterForm } from "@/components/auth/register-form";
+import { noIndexMetadata } from "@/lib/seo/private-pages";
+
+export const metadata: Metadata = noIndexMetadata(
+  "Регистрация",
+  "Создание аккаунта покупателя «Эквилибриум». Страница не индексируется поисковиками.",
+);
 
 export default function RegisterPage() {
   return (

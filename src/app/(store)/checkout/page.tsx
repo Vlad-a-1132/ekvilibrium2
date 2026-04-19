@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { getCurrentUser } from "@/lib/auth/user";
+import { noIndexMetadata } from "@/lib/seo/private-pages";
 import { getCart, normalizeCartData } from "@/lib/queries/cart";
+
+export const metadata: Metadata = noIndexMetadata(
+  "Оформление заказа",
+  "Оформление заказа в «Эквилибриум». Персональная страница оформления не предназначена для индексации.",
+);
 
 type CheckoutPageProps = {
   searchParams: Promise<{ error?: string }>;

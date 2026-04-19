@@ -5,6 +5,11 @@ import path from "path";
 import { NextResponse } from "next/server";
 
 import { isAdminAuthenticated } from "@/lib/auth/admin";
+import {
+  getProductUploadsRootAbsolute,
+  getProjectRoot,
+  publicProductImageUrl,
+} from "@/lib/uploads-path";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
@@ -27,7 +32,8 @@ function extFromFile(file: File): string | null {
 
 /**
  * POST multipart/form-data, поле `file`.
- * Сохраняет в public/uploads/products/{uuid}/{uuid}.ext
+ * Пишет в `{PROJECT_ROOT или cwd}/public/uploads/products/{uuid}/{uuid}.ext`
+ * и возвращает публичный путь `/uploads/products/...` (тот же, что сохраняется в БД).
  */
 export async function POST(req: Request) {
   if (!(await isAdminAuthenticated())) {
@@ -60,8 +66,8 @@ export async function POST(req: Request) {
 
   const folder = randomUUID();
   const filename = `${randomUUID()}.${ext}`;
-  const relativeDir = path.join("public", "uploads", "products", folder);
-  const absoluteDir = path.join(process.cwd(), relativeDir);
+  const uploadsRoot = getProductUploadsRootAbsolute();
+  const absoluteDir = path.join(uploadsRoot, folder);
   const absolutePath = path.join(absoluteDir, filename);
 
   await mkdir(absoluteDir, { recursive: true });
@@ -69,7 +75,18 @@ export async function POST(req: Request) {
   const buffer = Buffer.from(await entry.arrayBuffer());
   await writeFile(absolutePath, buffer);
 
-  const publicPath = `/uploads/products/${folder}/${filename}`;
+  const publicPath = publicProductImageUrl(folder, filename);
+
+  if (process.env.UPLOAD_PATH_DEBUG === "1") {
+    console.info(
+      "[api/upload] projectRoot=%s uploadsRoot=%s wrote=%s publicUrl=%s",
+      getProjectRoot(),
+      uploadsRoot,
+      absolutePath,
+      publicPath,
+    );
+  }
+
   return NextResponse.json({ path: publicPath });
 }
 

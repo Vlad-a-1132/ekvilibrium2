@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  CONFIRMED
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum AdminNotificationType {
+  NEW_ORDER
+}
+
+model MainCategory {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+
+  subcategories SubCategory[]
+  products      Product[]
+}
+
+model SubCategory {
+  id             String        @id @default(cuid())
+  name           String
+  slug           String        @unique
+
+  mainCategory   MainCategory  @relation(fields: [mainCategoryId], references: [id])
+  mainCategoryId String
+
+  products       Product[]
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  name           String
+  slug           String        @unique
+  price          Float
+  oldPrice       Float?
+  sku            String?       @unique
+  stock          Int
+  color          String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  isActive       Boolean       @default(true)
+
+  mainCategory   MainCategory  @relation(fields: [mainCategoryId], references: [id])
+  mainCategoryId String
+
+  subCategory    SubCategory   @relation(fields: [subCategoryId], references: [id])
+  subCategoryId  String
+
+  images         ProductImage[]
+
+  cartItems      CartItem[]
+  wishlistItems  WishlistItem[]
+  orderItems     OrderItem[]
+
+  createdAt      DateTime      @default(now())
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  url       String
+  isPrimary Boolean  @default(false)
+
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+
+  quantity  Int      @default(1)
+  sessionId String
+
+  @@unique([productId, sessionId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+
+  sessionId String
+
+  @@unique([productId, sessionId])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions UserSession[]
+  orders   Order[]
+}
+
+/// Сессия входа (cookie), не путать с анонимной `eq_session` для корзины.
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("user_sessions")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber Int         @unique @default(autoincrement())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  email       String
+  phone       String
+  fullName    String
+  status      OrderStatus @default(NEW)
+  total       Float
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  items OrderItem[]
+
+  adminNotifications AdminNotification[]
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String?
+  product      Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName  String
+  productPrice Float
+  quantity     Int
+
+  @@index([orderId])
+}
+
+model AdminNotification {
+  id        String                @id @default(cuid())
+  type      AdminNotificationType
+  title     String
+  message   String                @db.Text
+  isRead    Boolean               @default(false)
+  readAt    DateTime?
+  createdAt DateTime              @default(now())
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([isRead, createdAt])
+  @@index([orderId])
+  @@map("admin_notifications")
+}

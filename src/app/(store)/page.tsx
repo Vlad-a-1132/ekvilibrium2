@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { HeroSlider } from "@/components/home/hero-slider";
-import { HomeSeoHero } from "@/components/home/home-seo-hero";
 import { HomeCategoryShowcase } from "@/components/home/home-category-showcase";
 import { HomeContact } from "@/components/home/home-contact";
 import { HomeSpotlight } from "@/components/home/home-spotlight";
@@ -12,15 +11,13 @@ import { absoluteUrl } from "@/lib/seo/site";
 import { getWishlistProductIds } from "@/lib/queries/wishlist";
 
 export const metadata: Metadata = {
-  title: "Канцелярия в Пятигорске — магазин канцтоваров «Эквилибриум»",
-  description:
-    "Канцтовары, бумажная продукция, товары для творчества и рюкзаки в Пятигорске. Интернет-магазин «Эквилибриум» — оформление заказа онлайн, консультации по ассортименту.",
+  title: "Эквилибриум — канцелярия и канцтовары",
+  description: "Интернет-магазин канцелярии в Пятигорске.",
   alternates: { canonical: absoluteUrl("/") },
   openGraph: {
     url: absoluteUrl("/"),
-    title: "Канцелярия в Пятигорске — магазин канцтоваров «Эквилибриум»",
-    description:
-      "Купить канцтовары в Пятигорске: канцелярский магазин «Эквилибриум», каталог для школы, офиса и творчества.",
+    title: "Эквилибриум — канцелярия",
+    description: "Канцтовары и канцелярия в Пятигорске.",
   },
 };
 
@@ -40,10 +37,7 @@ export default async function HomePage() {
     <>
       <StoreFullBleed className="border-b border-[#403A34]/10 bg-gradient-to-b from-[#f6f1eb] via-[#f6f1eb] to-[#ede6dc]/50">
         <SiteContainer className="py-12 md:py-16 lg:py-20">
-          <HomeSeoHero />
-          <div className="mt-10">
-            <HeroSlider />
-          </div>
+          <HeroSlider />
         </SiteContainer>
       </StoreFullBleed>
 

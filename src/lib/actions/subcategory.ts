@@ -100,3 +100,42 @@ export async function deleteSubcategory(
   revalidatePath("/admin/subcategories");
   return { ok: true };
 }
+
+export async function updateSubcategoryName(
+  subCategoryId: string,
+  name: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdminAuth();
+  const id = subCategoryId.trim();
+  const n = name.trim();
+  if (!id) {
+    return { ok: false, error: "Не указана подкатегория." };
+  }
+  if (!n) {
+    return { ok: false, error: "Укажите название." };
+  }
+  if (n.length > 200) {
+    return { ok: false, error: "Название не длиннее 200 символов." };
+  }
+
+  const existing = await prisma.subCategory.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+  if (!existing) {
+    return { ok: false, error: "Подкатегория не найдена." };
+  }
+
+  try {
+    await prisma.subCategory.update({
+      where: { id },
+      data: { name: n },
+    });
+  } catch {
+    return { ok: false, error: "Не удалось сохранить название." };
+  }
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/subcategories");
+  return { ok: true };
+}

@@ -10,7 +10,7 @@ import { getMainCategoryForCatalog, getSubcategoriesByMainCategorySlug } from "@
 import { getProductsByCategory } from "@/lib/queries/products";
 import { getWishlistProductIds } from "@/lib/queries/wishlist";
 import { absoluteUrl } from "@/lib/seo/site";
-import { mainCategorySeo, subcategorySeoParagraph } from "@/lib/seo/strings";
+import { mainCategorySeo } from "@/lib/seo/strings";
 import { truncateMetaDescription } from "@/lib/seo/truncate";
 
 type CatalogPageProps = {
@@ -98,14 +98,7 @@ export default async function CatalogMainCategoryPage({ params, searchParams }: 
 
   const empty = total === 0;
 
-  const seo = mainCategorySeo[mainCategorySlug];
-  const activeSub = activeSubSlug
-    ? subcategories.find((s) => s.slug === activeSubSlug)
-    : undefined;
-  const introBody = activeSub
-    ? subcategorySeoParagraph(activeSub.name, category.name, mainCategorySlug)
-    : seo?.intro ??
-      `Каталог «${category.name}» в интернет-магазине «Эквилибриум», Пятигорск. Цены и наличие — в карточках; при вопросах по разделу напишите или позвоните.`;
+  const activeSub = activeSubSlug ? subcategories.find((s) => s.slug === activeSubSlug) : undefined;
 
   return (
     <div className="py-12 md:py-16">
@@ -129,7 +122,6 @@ export default async function CatalogMainCategoryPage({ params, searchParams }: 
           category.name
         )}
       </h1>
-      <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-[#403A34]/76">{introBody}</p>
 
       {subcategories.length > 0 && (
         <div className="mt-8 lg:hidden">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { DeleteSubcategoryButton } from "@/components/admin/delete-subcategory-button";
+import { SubcategoryRenameForm } from "@/components/admin/subcategory-rename-form";
 import { getAdminSubcategoriesSplit } from "@/lib/queries/admin";
 
 type AdminSubcategoriesPageProps = {
@@ -24,7 +25,8 @@ export default async function AdminSubcategoriesPage({ searchParams }: AdminSubc
         <div>
           <h2 className="font-serif text-2xl text-[#403A34]">Подкатегории</h2>
           <p className="mt-2 text-sm text-[#403A34]/70">
-            Под каноническими главными категориями (витрина и каталог).
+            Под каноническими главными категориями (витрина и каталог). Название подкатегории можно изменить в
+            таблице; slug не меняется — от него строятся URL каталога.
           </p>
         </div>
         <Link
@@ -57,7 +59,9 @@ export default async function AdminSubcategoriesPage({ searchParams }: AdminSubc
               <tbody>
                 {legacy.map((r) => (
                   <tr key={r.id} className="border-b border-amber-100/80 last:border-0">
-                    <td className="px-3 py-2">{r.name}</td>
+                    <td className="px-3 py-2 align-top">
+                      <SubcategoryRenameForm subCategoryId={r.id} initialName={r.name} compact />
+                    </td>
                     <td className="px-3 py-2 font-mono">{r.slug}</td>
                     <td className="px-3 py-2">{r.mainCategoryName}</td>
                     <td className="px-3 py-2 tabular-nums">{r.productCount}</td>
@@ -99,7 +103,9 @@ export default async function AdminSubcategoriesPage({ searchParams }: AdminSubc
             <tbody>
               {active.map((r) => (
                 <tr key={r.id} className="border-b border-[#403A34]/5 last:border-0">
-                  <td className="px-4 py-3 font-medium text-[#403A34]">{r.name}</td>
+                  <td className="px-4 py-3 align-top text-[#403A34]">
+                    <SubcategoryRenameForm subCategoryId={r.id} initialName={r.name} />
+                  </td>
                   <td className="px-4 py-3 font-mono text-xs text-[#403A34]/75">{r.slug}</td>
                   <td className="px-4 py-3 text-[#403A34]/85">{r.mainCategoryName}</td>
                   <td className="px-4 py-3 tabular-nums text-[#403A34]/85">{r.productCount}</td>

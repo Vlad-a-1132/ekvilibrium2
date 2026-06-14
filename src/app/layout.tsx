@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { getSiteUrl } from "@/lib/seo/site";
+import { getSiteUrl, siteIconsMetadata } from "@/lib/seo/site";
 
 import "./globals.css";
 
@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   },
   description: "Интернет-магазин канцелярии в Пятигорске.",
   applicationName: "Эквилибриум",
+  icons: siteIconsMetadata,
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",

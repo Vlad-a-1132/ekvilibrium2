@@ -1,27 +1,22 @@
 import Link from "next/link";
 
+import { AdminProductsPagination } from "@/components/admin/admin-products-pagination";
+import { AdminProductsSortLink } from "@/components/admin/admin-products-sort-link";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { copyProductFromForm } from "@/lib/actions/product";
 import { Button } from "@/components/ui/button";
 import { getStockLabel } from "@/lib/product-stock-level";
-import { prisma } from "@/lib/prisma";
-
-async function loadAdminProducts() {
-  try {
-    return await prisma.product.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      include: {
-        mainCategory: { select: { name: true } },
-      },
-    });
-  } catch {
-    return [];
-  }
-}
+import { getAdminProductsList } from "@/lib/queries/admin-products";
 
 type AdminProductsPageProps = {
-  searchParams: Promise<{ created?: string; copyError?: string; deleted?: string }>;
+  searchParams: Promise<{
+    created?: string;
+    copyError?: string;
+    deleted?: string;
+    page?: string;
+    sort?: string;
+    dir?: string;
+  }>;
 };
 
 export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
@@ -29,7 +24,11 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
   const justCreated = sp.created === "1";
   const copyError = sp.copyError === "1";
   const justDeleted = sp.deleted === "1";
-  const products = await loadAdminProducts();
+  const list = await getAdminProductsList({
+    page: sp.page,
+    sort: sp.sort,
+    dir: sp.dir,
+  });
 
   return (
     <div>
@@ -65,7 +64,9 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
         <div>
           <h2 className="font-serif text-2xl text-[#403A34]">Товары</h2>
           <p className="mt-2 text-sm text-[#403A34]/70">
-            Последние 50 позиций. Создание и редактирование — через формы ниже.
+            {list.total === 0
+              ? "Список пуст."
+              : `Всего ${list.total} поз. · по ${list.pageSize} на странице · сортировка по заголовкам таблицы.`}
           </p>
         </div>
         <Button asChild>
@@ -73,7 +74,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
         </Button>
       </div>
 
-      {products.length === 0 ? (
+      {list.items.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-[#403A34]/20 bg-white/50 p-10 text-center text-sm text-[#403A34]/60">
           Пока нет товаров.{" "}
           <Link href="/admin/products/new" className="font-medium text-[#403A34] underline">
@@ -85,16 +86,51 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-[#403A34]/10 bg-[#fbf8f4] text-xs uppercase tracking-wide text-[#403A34]/55">
               <tr>
-                <th className="px-4 py-3 font-medium">Название</th>
-                <th className="px-4 py-3 font-medium">Категория</th>
-                <th className="px-4 py-3 font-medium">Цена</th>
-                <th className="px-4 py-3 font-medium">Наличие</th>
-                <th className="px-4 py-3 font-medium">Статус</th>
+                <th className="px-4 py-3 font-medium">
+                  <AdminProductsSortLink
+                    label="Название"
+                    field="name"
+                    currentSort={list.sort}
+                    currentDir={list.dir}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <AdminProductsSortLink
+                    label="Категория"
+                    field="category"
+                    currentSort={list.sort}
+                    currentDir={list.dir}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <AdminProductsSortLink
+                    label="Цена"
+                    field="price"
+                    currentSort={list.sort}
+                    currentDir={list.dir}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <AdminProductsSortLink
+                    label="Наличие"
+                    field="stock"
+                    currentSort={list.sort}
+                    currentDir={list.dir}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <AdminProductsSortLink
+                    label="Статус"
+                    field="status"
+                    currentSort={list.sort}
+                    currentDir={list.dir}
+                  />
+                </th>
                 <th className="px-4 py-3 font-medium text-right">Действия</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {list.items.map((p) => (
                 <tr key={p.id} className="border-b border-[#403A34]/5 last:border-0">
                   <td className="px-4 py-3">
                     <Link
@@ -134,6 +170,16 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
               ))}
             </tbody>
           </table>
+
+          <div className="px-4">
+            <AdminProductsPagination
+              page={list.page}
+              totalPages={list.totalPages}
+              total={list.total}
+              sort={list.sort}
+              dir={list.dir}
+            />
+          </div>
         </div>
       )}
     </div>

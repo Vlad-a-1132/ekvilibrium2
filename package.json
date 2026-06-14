@@ -5,14 +5,15 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:webpack": "next dev",
-    "build": "next build --turbopack",
+    "build": "npm run favicons && next build --turbopack",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
-    "db:normalize": "tsx prisma/normalize-categories.ts"
+    "db:normalize": "tsx prisma/normalize-categories.ts",
+    "favicons": "node scripts/generate-favicons.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

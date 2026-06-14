@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-
 import { getCurrentUser } from "@/lib/auth/user";
+import { redirectTo } from "@/lib/http/redirect";
 import { getCart, normalizeCartData } from "@/lib/queries/cart";
 import { getSessionId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
@@ -38,29 +37,24 @@ function buildNewOrderAdminMessage(params: {
   ].join("\n");
 }
 
-function redirectResponse(request: Request, pathnameWithSearch: string): NextResponse {
-  const url = new URL(pathnameWithSearch, new URL(request.url).origin);
-  return NextResponse.redirect(url, 303);
-}
-
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) {
-    return redirectResponse(request, "/login?next=/checkout");
+    return redirectTo(request, "/login?next=/checkout");
   }
 
   let formData: FormData;
   try {
     formData = await request.formData();
   } catch {
-    return redirectResponse(request, "/checkout?error=" + encodeURIComponent("Некорректные данные формы."));
+    return redirectTo(request, "/checkout?error=" + encodeURIComponent("Некорректные данные формы."));
   }
 
   const phoneInput = normalizePhone(String(formData.get("phone") ?? ""));
   const phone = phoneInput || (user.phone?.trim() ?? "");
 
   if (!phone || phone.replace(/\D/g, "").length < 10) {
-    return redirectResponse(
+    return redirectTo(
       request,
       "/checkout?error=" + encodeURIComponent("Укажите номер телефона — не менее 10 цифр."),
     );
@@ -68,7 +62,7 @@ export async function POST(request: Request) {
 
   const sessionId = await getSessionId();
   if (!sessionId) {
-    return redirectResponse(
+    return redirectTo(
       request,
       "/checkout?error=" + encodeURIComponent("Не удалось определить сессию корзины."),
     );
@@ -76,7 +70,7 @@ export async function POST(request: Request) {
 
   const cart = normalizeCartData(await getCart());
   if (cart.lines.length === 0) {
-    return redirectResponse(request, "/cart");
+    return redirectTo(request, "/cart");
   }
 
   let createdOrderId: string | null = null;
@@ -135,18 +129,18 @@ export async function POST(request: Request) {
       createdOrderId = order.id;
     });
   } catch {
-    return redirectResponse(
+    return redirectTo(
       request,
       "/checkout?error=" + encodeURIComponent("Не удалось оформить заказ. Попробуйте позже."),
     );
   }
 
   if (!createdOrderId) {
-    return redirectResponse(
+    return redirectTo(
       request,
       "/checkout?error=" + encodeURIComponent("Не удалось оформить заказ. Попробуйте позже."),
     );
   }
 
-  return redirectResponse(request, `/account/orders/${createdOrderId}?created=1`);
+  return redirectTo(request, `/account/orders/${createdOrderId}?created=1`);
 }

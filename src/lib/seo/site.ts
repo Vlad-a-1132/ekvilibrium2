@@ -5,6 +5,16 @@ export function getSiteUrl(): string {
   return "https://equilibriumkanz.ru";
 }
 
+/** Favicon и apple-touch icon — наследуются всеми страницами из корневого layout. */
+export const siteIconsMetadata = {
+  icon: [
+    { url: "/favicon.ico", sizes: "any" },
+    { url: "/icon.png", type: "image/png", sizes: "192x192" },
+  ],
+  apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+  shortcut: "/favicon.ico",
+} as const;
+
 export function absoluteUrl(pathname: string, searchParams?: Record<string, string | undefined>): string {
   const base = getSiteUrl();
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;

@@ -17,7 +17,7 @@ export type AdminProductSortField = (typeof ADMIN_PRODUCT_SORT_FIELDS)[number];
 export type AdminProductSortDir = "asc" | "desc";
 
 export type AdminProductsListParams = {
-  page?: number;
+  page?: string | number;
   sort?: string;
   dir?: string;
 };

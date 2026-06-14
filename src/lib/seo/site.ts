@@ -13,7 +13,7 @@ export const siteIconsMetadata = {
   ],
   apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
   shortcut: "/favicon.ico",
-} as const;
+};
 
 export function absoluteUrl(pathname: string, searchParams?: Record<string, string | undefined>): string {
   const base = getSiteUrl();

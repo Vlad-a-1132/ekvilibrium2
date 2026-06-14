@@ -11,21 +11,43 @@ const appDir = path.join(root, "src/app");
 
 const warmBackground = { r: 246, g: 241, b: 235, alpha: 1 };
 
-async function writePng(size, filename) {
-  await sharp(logoPath)
-    .resize(size, size, { fit: "contain", background: warmBackground })
+async function composeSquareIcon(size) {
+  const logo = sharp(logoPath);
+  const meta = await logo.metadata();
+  const logoWidth = meta.width ?? 256;
+  const logoHeight = meta.height ?? 71;
+
+  const maxLogoWidth = Math.round(size * 0.9);
+  const maxLogoHeight = Math.round(size * 0.72);
+  const scale = Math.min(maxLogoWidth / logoWidth, maxLogoHeight / logoHeight);
+  const targetWidth = Math.max(1, Math.round(logoWidth * scale));
+  const targetHeight = Math.max(1, Math.round(logoHeight * scale));
+
+  const logoBuffer = await logo.resize(targetWidth, targetHeight, { fit: "inside" }).png().toBuffer();
+
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: warmBackground,
+    },
+  })
+    .composite([{ input: logoBuffer, gravity: "center" }])
     .png()
-    .toFile(path.join(appDir, filename));
+    .toBuffer();
+}
+
+async function writePng(size, filename) {
+  const buffer = await composeSquareIcon(size);
+  await fs.writeFile(path.join(appDir, filename), buffer);
 }
 
 async function writeIco() {
-  const pngBuffer = await sharp(logoPath)
-    .resize(32, 32, { fit: "contain", background: warmBackground })
-    .png()
-    .toBuffer();
-
+  const pngBuffer = await composeSquareIcon(32);
   const width = 32;
   const height = 32;
+
   const header = Buffer.alloc(6);
   header.writeUInt16LE(0, 0);
   header.writeUInt16LE(1, 2);

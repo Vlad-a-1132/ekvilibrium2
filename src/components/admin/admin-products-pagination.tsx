@@ -14,7 +14,10 @@ type AdminProductsPaginationProps = {
   total: number;
   sort: AdminProductSortField;
   dir: AdminProductSortDir;
+  category?: string;
 };
+
+import { AdminProductsPageJump } from "@/components/admin/admin-products-page-jump";
 
 export function AdminProductsPagination({
   page,
@@ -22,6 +25,7 @@ export function AdminProductsPagination({
   total,
   sort,
   dir,
+  category,
 }: AdminProductsPaginationProps) {
   if (totalPages <= 1) return null;
 
@@ -44,10 +48,10 @@ export function AdminProductsPagination({
         <span className="font-medium tabular-nums text-[#403A34]">{total}</span>
       </p>
 
-      <div className="flex items-center gap-3 text-sm text-[#403A34]">
+      <div className="flex flex-wrap items-center gap-3 text-sm text-[#403A34]">
         {prev != null ? (
           <Link
-            href={adminProductsHref({ page: prev, sort, dir })}
+            href={adminProductsHref({ page: prev, sort, dir, category })}
             className="rounded-full border border-[#403A34]/20 px-4 py-2 transition-colors hover:bg-[#403A34]/8"
           >
             Назад
@@ -62,9 +66,16 @@ export function AdminProductsPagination({
           <span className="mx-1">/</span>
           {totalPages}
         </span>
+        <AdminProductsPageJump
+          page={page}
+          totalPages={totalPages}
+          sort={sort}
+          dir={dir}
+          category={category}
+        />
         {next != null ? (
           <Link
-            href={adminProductsHref({ page: next, sort, dir })}
+            href={adminProductsHref({ page: next, sort, dir, category })}
             className={cn(
               "rounded-full border border-[#403A34]/20 px-4 py-2 transition-colors hover:bg-[#403A34]/8",
             )}

@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
+import { CANONICAL_MAIN_CATEGORY_SLUGS } from "@/lib/category-canonical";
 import { prisma } from "@/lib/prisma";
 
 export const ADMIN_PRODUCTS_PAGE_SIZE = 25;
@@ -20,6 +21,12 @@ export type AdminProductsListParams = {
   page?: string | number;
   sort?: string;
   dir?: string;
+  category?: string;
+};
+
+export type AdminProductsCategoryOption = {
+  slug: string;
+  name: string;
 };
 
 export type AdminProductsListResult = {
@@ -31,7 +38,7 @@ export type AdminProductsListResult = {
     stock: number;
     isActive: boolean;
     createdAt: Date;
-    mainCategory: { name: string };
+    mainCategory: { name: string; slug: string };
   }>;
   page: number;
   pageSize: number;
@@ -39,28 +46,34 @@ export type AdminProductsListResult = {
   totalPages: number;
   sort: AdminProductSortField;
   dir: AdminProductSortDir;
+  category?: string;
+  categories: AdminProductsCategoryOption[];
 };
 
 export function parseAdminProductsListParams(
   raw: AdminProductsListParams,
-): Pick<AdminProductsListResult, "page" | "sort" | "dir"> {
+): Pick<AdminProductsListResult, "page" | "sort" | "dir" | "category"> {
   const page = Math.max(1, Number.parseInt(String(raw.page ?? "1"), 10) || 1);
   const sort = ADMIN_PRODUCT_SORT_FIELDS.includes(raw.sort as AdminProductSortField)
     ? (raw.sort as AdminProductSortField)
     : "createdAt";
   const dir: AdminProductSortDir = raw.dir === "asc" ? "asc" : "desc";
-  return { page, sort, dir };
+  const category =
+    raw.category && CANONICAL_MAIN_CATEGORY_SLUGS.includes(raw.category) ? raw.category : undefined;
+  return { page, sort, dir, category };
 }
 
 export function adminProductsHref(opts?: {
   page?: number;
   sort?: AdminProductSortField;
   dir?: AdminProductSortDir;
+  category?: string;
 }): string {
   const p = new URLSearchParams();
   if (opts?.page && opts.page > 1) p.set("page", String(opts.page));
   if (opts?.sort && opts.sort !== "createdAt") p.set("sort", opts.sort);
   if (opts?.dir && opts.dir !== "desc") p.set("dir", opts.dir);
+  if (opts?.category) p.set("category", opts.category);
   const q = p.toString();
   return q ? `/admin/products?${q}` : "/admin/products";
 }
@@ -86,20 +99,42 @@ function buildOrderBy(
   }
 }
 
+function buildWhere(category?: string): Prisma.ProductWhereInput | undefined {
+  if (!category) return undefined;
+  return { mainCategory: { slug: category } };
+}
+
+async function getCanonicalCategoryOptions(): Promise<AdminProductsCategoryOption[]> {
+  try {
+    const rows = await prisma.mainCategory.findMany({
+      where: { slug: { in: [...CANONICAL_MAIN_CATEGORY_SLUGS] } },
+      orderBy: { name: "asc" },
+      select: { slug: true, name: true },
+    });
+    const order = new Map(CANONICAL_MAIN_CATEGORY_SLUGS.map((slug, index) => [slug, index]));
+    return rows.sort((a, b) => (order.get(a.slug) ?? 99) - (order.get(b.slug) ?? 99));
+  } catch {
+    return [];
+  }
+}
+
 export async function getAdminProductsList(
   raw: AdminProductsListParams,
 ): Promise<AdminProductsListResult> {
-  const { page, sort, dir } = parseAdminProductsListParams(raw);
+  const { page, sort, dir, category } = parseAdminProductsListParams(raw);
+  const where = buildWhere(category);
 
   try {
-    const [total, items] = await Promise.all([
-      prisma.product.count(),
+    const [categories, total, items] = await Promise.all([
+      getCanonicalCategoryOptions(),
+      prisma.product.count({ where }),
       prisma.product.findMany({
+        where,
         orderBy: buildOrderBy(sort, dir),
         skip: (page - 1) * ADMIN_PRODUCTS_PAGE_SIZE,
         take: ADMIN_PRODUCTS_PAGE_SIZE,
         include: {
-          mainCategory: { select: { name: true } },
+          mainCategory: { select: { name: true, slug: true } },
         },
       }),
     ]);
@@ -108,7 +143,7 @@ export async function getAdminProductsList(
     const safePage = Math.min(page, totalPages);
 
     if (safePage !== page && total > 0) {
-      return getAdminProductsList({ page: safePage, sort, dir });
+      return getAdminProductsList({ page: safePage, sort, dir, category });
     }
 
     return {
@@ -128,6 +163,8 @@ export async function getAdminProductsList(
       totalPages,
       sort,
       dir,
+      category,
+      categories,
     };
   } catch {
     return {
@@ -138,6 +175,8 @@ export async function getAdminProductsList(
       totalPages: 1,
       sort,
       dir,
+      category,
+      categories: [],
     };
   }
 }

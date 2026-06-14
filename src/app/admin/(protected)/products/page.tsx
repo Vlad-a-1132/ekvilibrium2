@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdminProductsCategoryFilter } from "@/components/admin/admin-products-category-filter";
 import { AdminProductsPagination } from "@/components/admin/admin-products-pagination";
 import { AdminProductsSortLink } from "@/components/admin/admin-products-sort-link";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
@@ -16,6 +17,7 @@ type AdminProductsPageProps = {
     page?: string;
     sort?: string;
     dir?: string;
+    category?: string;
   }>;
 };
 
@@ -28,7 +30,12 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
     page: sp.page,
     sort: sp.sort,
     dir: sp.dir,
+    category: sp.category,
   });
+
+  const activeCategoryName = list.category
+    ? list.categories.find((c) => c.slug === list.category)?.name
+    : undefined;
 
   return (
     <div>
@@ -65,8 +72,12 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
           <h2 className="font-serif text-2xl text-[#403A34]">Товары</h2>
           <p className="mt-2 text-sm text-[#403A34]/70">
             {list.total === 0
-              ? "Список пуст."
-              : `Всего ${list.total} поз. · по ${list.pageSize} на странице · сортировка по заголовкам таблицы.`}
+              ? activeCategoryName
+                ? `В категории «${activeCategoryName}» пока нет товаров.`
+                : "Список пуст."
+              : activeCategoryName
+                ? `В категории «${activeCategoryName}»: ${list.total} поз. · по ${list.pageSize} на странице.`
+                : `Всего ${list.total} поз. · по ${list.pageSize} на странице · сортировка по заголовкам таблицы.`}
           </p>
         </div>
         <Button asChild>
@@ -74,12 +85,34 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
         </Button>
       </div>
 
+      {list.categories.length > 0 && (
+        <div className="mt-5">
+          <AdminProductsCategoryFilter
+            categories={list.categories}
+            activeCategory={list.category}
+            sort={list.sort}
+            dir={list.dir}
+          />
+        </div>
+      )}
+
       {list.items.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-[#403A34]/20 bg-white/50 p-10 text-center text-sm text-[#403A34]/60">
-          Пока нет товаров.{" "}
-          <Link href="/admin/products/new" className="font-medium text-[#403A34] underline">
-            Создать первый
-          </Link>
+          {list.category ? (
+            <>
+              В выбранной категории товаров нет.{" "}
+              <Link href="/admin/products" className="font-medium text-[#403A34] underline">
+                Показать все
+              </Link>
+            </>
+          ) : (
+            <>
+              Пока нет товаров.{" "}
+              <Link href="/admin/products/new" className="font-medium text-[#403A34] underline">
+                Создать первый
+              </Link>
+            </>
+          )}
         </div>
       ) : (
         <div className="mt-8 overflow-x-auto rounded-xl border border-[#403A34]/10 bg-white/60">
@@ -92,6 +125,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                     field="name"
                     currentSort={list.sort}
                     currentDir={list.dir}
+                    category={list.category}
                   />
                 </th>
                 <th className="px-4 py-3 font-medium">
@@ -100,6 +134,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                     field="category"
                     currentSort={list.sort}
                     currentDir={list.dir}
+                    category={list.category}
                   />
                 </th>
                 <th className="px-4 py-3 font-medium">
@@ -108,6 +143,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                     field="price"
                     currentSort={list.sort}
                     currentDir={list.dir}
+                    category={list.category}
                   />
                 </th>
                 <th className="px-4 py-3 font-medium">
@@ -116,6 +152,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                     field="stock"
                     currentSort={list.sort}
                     currentDir={list.dir}
+                    category={list.category}
                   />
                 </th>
                 <th className="px-4 py-3 font-medium">
@@ -124,6 +161,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                     field="status"
                     currentSort={list.sort}
                     currentDir={list.dir}
+                    category={list.category}
                   />
                 </th>
                 <th className="px-4 py-3 font-medium text-right">Действия</th>
@@ -178,6 +216,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
               total={list.total}
               sort={list.sort}
               dir={list.dir}
+              category={list.category}
             />
           </div>
         </div>

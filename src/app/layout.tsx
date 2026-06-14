@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { YandexMetrika } from "@/components/analytics/yandex-metrika";
 import { getSiteUrl, siteIconsMetadata } from "@/lib/seo/site";
 
 import "./globals.css";
@@ -38,7 +39,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className="min-h-screen font-sans antialiased">{children}</body>
+      <body className="min-h-screen font-sans antialiased">
+        {children}
+        <YandexMetrika />
+      </body>
     </html>
   );
 }
